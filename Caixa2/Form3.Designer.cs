@@ -154,6 +154,7 @@
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.Size = new System.Drawing.Size(803, 210);
             this.dataGridView1.TabIndex = 44;
+            this.dataGridView1.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellClick);
             // 
             // textBox2
             // 
@@ -181,6 +182,7 @@
             this.button2.TabIndex = 47;
             this.button2.Text = "Finalizar compra";
             this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
             // codVenda
             // 
@@ -211,9 +213,11 @@
             this.Controls.Add(this.txbValor);
             this.Controls.Add(this.txbCod);
             this.Controls.Add(this.label2);
+            this.KeyPreview = true;
             this.Name = "Form3";
             this.Text = "Form3";
             this.Load += new System.EventHandler(this.Form3_Load);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Form3_KeyDown);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();

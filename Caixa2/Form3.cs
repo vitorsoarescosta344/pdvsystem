@@ -54,6 +54,9 @@ namespace Caixa2
             }
         }
 
+        public static int quant;
+        public static float nValor;
+
         private void ConsultarProduto()
         {
             strMySQL = "select * from mercado.produtos where ProdutoID = '"+txbCod.Text+"'";
@@ -89,6 +92,68 @@ namespace Caixa2
             }
         }
 
+        private void GravarVenda()
+        {
+            strMySQL = "insert into mercado.caixa(VendaID, ValorTotal) value(@VendaID, @ValorTotal)";
+            MySqlCommand comando = new MySqlCommand(strMySQL, con);
+
+            comando.Parameters.AddWithValue("@VendaID",Convert.ToInt32( codVenda.Text));
+            comando.Parameters.AddWithValue("@ValorTotal", Convert.ToDecimal(txbValorDaCompra.Text));
+
+            try
+            {
+                con.Open();
+                comando.ExecuteNonQuery();
+            }
+
+            catch(Exception e)
+            {
+                MessageBox.Show(e.Message);
+            }
+
+            finally
+            {
+                Inserir();
+                dataGridView1.Rows.Clear();
+                TotalVenda = 0;
+                txbValorDaCompra.Text = "0";
+                con.Close();
+            }
+        }
+
+        private void Inserir()
+        {
+            strMySQL = "Insert into mercado.itemvenda(VendaID, ProdutoID, Quantidade, ValorTotal) values(@VendaID, @ProdutoID, @Quantidade, @ValorTotal)";
+            MySqlCommand comando = new MySqlCommand(strMySQL, con);
+
+            try
+            {
+                if(con.State == ConnectionState.Closed)
+                {
+                    con.Open();
+                }
+
+                for (int i = 0; i < dataGridView1.Rows.Count - 1; i++)
+                {
+                    comando.Parameters.Clear();
+                    comando.Parameters.AddWithValue("@VendaID", codVenda.Text);
+                    comando.Parameters.AddWithValue("@ProdutoID", dataGridView1.Rows[i].Cells[0].Value);
+                    comando.Parameters.AddWithValue("@Quantidade", dataGridView1.Rows[i].Cells[3].Value);
+                    comando.Parameters.AddWithValue("@ValorTotal", float.Parse(dataGridView1.Rows[i].Cells[4].Value.ToString()));
+
+                    comando.ExecuteNonQuery();
+
+
+                }
+            }
+
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+            }
+
+        }
+
         void Limpar()
         {
             txbCod.Clear();
@@ -108,6 +173,75 @@ namespace Caixa2
             dataGridView1.Columns[3].Name = "Quantidade"; 
             dataGridView1.Columns[4].Name = "Total";
 
+        }
+
+        private void ConsultarQuantidade()
+        {
+            strMySQL = "Select Quantidade from mercado.produtos where ProdutoID='" + txbCod.Text + "'";
+            MySqlCommand comando = new MySqlCommand(strMySQL, con);
+
+            try
+            {
+                con.Open();
+                MySqlDataReader dr = comando.ExecuteReader();
+
+                while (dr.Read())
+                {
+                    if ((int.Parse(dr["Quantidade"].ToString()) < int.Parse(txbQuant.Text) || (int.Parse(dr["Quantidade"].ToString()) <= 0))) ;
+                    {
+                        MessageBox.Show("Estoque de produto esgotado", "Mensagem", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        txbQuant.Clear();
+                    }
+                }
+
+                quant = int.Parse(dr["Quantidade"].ToString());
+                if(quant <= 0)
+                {
+                    txbQuant.Clear();
+                }
+            }
+
+            catch(Exception e)
+            {
+                MessageBox.Show(e.Message);
+            }
+
+            finally
+            {
+                con.Close();
+            }
+        }
+
+        public void AlterarQuantidade()
+        {
+            int quantidade = 0;
+            quantidade = quant - int.Parse(txbQuant.Text);
+
+            if(quantidade <= 0)
+            {
+                quantidade = 0;
+            }
+
+            strMySQL = "update mercado.produtos set Quantidade = @Quantidade where ProdutoID'" + txbCod.Text + "'";
+            MySqlCommand comando = new MySqlCommand(strMySQL, con);
+            comando.Parameters.AddWithValue("@Quantidade", quantidade);
+
+            try
+            {
+                con.Close();
+                con.Open();
+                comando.ExecuteNonQuery();
+            }
+
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+            }
+
+            finally
+            {
+                con.Close();
+            }
         }
 
         private void Form3_Load(object sender, EventArgs e)
@@ -132,10 +266,13 @@ namespace Caixa2
 
         private void txbQuant_Validating(object sender, CancelEventArgs e)
         {
+            ConsultarQuantidade();
+
             if(txbQuant.Text != string.Empty)
             {
                 textBox2.Text = (float.Parse(txbValor.Text) * float.Parse(txbQuant.Text)).ToString();
                 button1.Focus();
+                AlterarQuantidade();
             }
             else
             {
@@ -148,7 +285,81 @@ namespace Caixa2
         {
             dataGridView1.Rows.Add(txbCod.Text, textBox3.Text, txbValor.Text, txbQuant.Text, textBox2.Text);
             TotalVenda += float.Parse(textBox2.Text);
-            txbValorDaCompra.Text = TotalVenda.ToString(); 
+            txbValorDaCompra.Text = TotalVenda.ToString();
+
+            Limpar();
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            GravarVenda();
+            GerarCodigoVenda();
+        }
+
+        private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            nValor = float.Parse(dataGridView1.Rows[e.RowIndex].Cells[4].Value.ToString());
+            dataGridView1.Rows.RemoveAt(e.RowIndex);
+            TotalVenda -= nValor;
+            textBox2.Text = TotalVenda.ToString();
+        }
+
+        void FecharForm(KeyEventArgs e)
+        {
+            if(e.KeyCode == Keys.Escape)
+            {
+                Close();
+            }
+        }
+        
+        void PularControles(KeyEventArgs e)
+        {
+            if(e.KeyCode == Keys.Enter)
+            {
+                SendKeys.Send("{TAB}");
+            }
+        }
+
+        void FinalizarCompra(KeyEventArgs e)
+        {
+            if(e.KeyCode == Keys.F10)
+            {
+                button2.PerformClick();
+            }
+        }
+
+        private void Form3_KeyDown(object sender, KeyEventArgs e)
+        {
+            //if(e.KeyCode == Keys.Escape)
+            //{
+            //    FecharForm(e);
+            //}
+
+            //else if (e.KeyCode == Keys.Enter)
+            //{
+            //    PularControles(e);
+            //}
+
+            //else if(e.KeyCode == Keys.F10)
+            //{
+            //    FinalizarCompra(e);
+            //}
+
+            
+
+            switch (e.KeyCode)
+            {
+                case Keys.Escape:
+                    FecharForm(e);
+                    break;
+                case Keys.Enter:
+                    PularControles(e);
+                    break;
+                case Keys.F10:
+                    FinalizarCompra(e);
+                    break;
+            }
+
         }
     }
 }
