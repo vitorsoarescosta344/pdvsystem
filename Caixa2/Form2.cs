@@ -36,24 +36,44 @@ namespace Caixa2
                 comando.Fill(ds, "mercado.produto");
                 int cont = ds.Tables["mercado.produtos"].Rows.Count;
 
-                if(cont == 0)
-                {
-                    MessageBox.Show("Produto não cadastrado", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                    txbConsulta.Clear();
-                }
+                //if(cont == 0)
+                //{
+                //    MessageBox.Show("Produto não cadastrado", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                //    txbConsulta.Clear();
+                //}
 
-                else if(cont > 0)
-                {
-                    byte[] data = new byte[0];
-                    data = (Byte[])ds.Tables["mercado.produtos"].Rows[cont - 1]["Foto"];
-                    MemoryStream stream = new MemoryStream(data);
-                    pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
-                    pictureBox1.Image = Image.FromStream(stream);
-                    txbCod.Text = Convert.ToString(ds.Tables["mercado.produtos"].Rows[cont - 1]["ProdutoID"]);
-                    textBox3.Text = Convert.ToString(ds.Tables["mercado.produtos"].Rows[cont - 1]["Nome"]);
-                    txbQuantEstoque.Text = Convert.ToString(ds.Tables["mercado.produtos"].Rows[cont - 1]["Quantidade"]);
-                    txbValor.Text = Convert.ToString(ds.Tables["mercado.produtos"].Rows[cont - 1]["Preco"]);
+                //else if(cont > 0)
+                //{
+                //    byte[] data = new byte[0];
+                //    data = (Byte[])ds.Tables["mercado.produtos"].Rows[cont - 1]["Foto"];
+                //    MemoryStream stream = new MemoryStream(data);
+                //    pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
+                //    pictureBox1.Image = Image.FromStream(stream);
+                //    txbCod.Text = Convert.ToString(ds.Tables["mercado.produtos"].Rows[cont - 1]["ProdutoID"]);
+                //    textBox3.Text = Convert.ToString(ds.Tables["mercado.produtos"].Rows[cont - 1]["Nome"]);
+                //    txbQuantEstoque.Text = Convert.ToString(ds.Tables["mercado.produtos"].Rows[cont - 1]["Quantidade"]);
+                //    txbValor.Text = Convert.ToString(ds.Tables["mercado.produtos"].Rows[cont - 1]["Preco"]);
 
+                //}
+
+                switch (cont)
+                {
+                    case int i when i == 0:
+                        MessageBox.Show("Produto não cadastrado", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        txbConsulta.Clear();
+                        break;
+
+                    case int i when i > 0:
+                        byte[] data = new byte[0];
+                        data = (Byte[])ds.Tables["mercado.produtos"].Rows[cont - 1]["Foto"];
+                        MemoryStream stream = new MemoryStream(data);
+                        pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
+                        pictureBox1.Image = Image.FromStream(stream);
+                        txbCod.Text = Convert.ToString(ds.Tables["mercado.produtos"].Rows[cont - 1]["ProdutoID"]);
+                        textBox3.Text = Convert.ToString(ds.Tables["mercado.produtos"].Rows[cont - 1]["Nome"]);
+                        txbQuantEstoque.Text = Convert.ToString(ds.Tables["mercado.produtos"].Rows[cont - 1]["Quantidade"]);
+                        txbValor.Text = Convert.ToString(ds.Tables["mercado.produtos"].Rows[cont - 1]["Preco"]);
+                        break;
                 }
             }
             catch(Exception e)
@@ -132,6 +152,7 @@ namespace Caixa2
                 pictureBox1.Image.Save(stream, ImageFormat.Png);
                 stream.Seek(0, SeekOrigin.Begin);
             }
+
 
             bArray = new byte[stream.Length];
             stream.Read(bArray, 0, Convert.ToInt32(stream.Length));
